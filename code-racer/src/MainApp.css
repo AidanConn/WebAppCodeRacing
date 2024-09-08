@@ -1,0 +1,134 @@
+/* src/App.css */
+html, body {
+  margin: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden; /* Prevent scrolling */
+  background-image: url('../public/nature.jpg');
+  background-size: cover;
+
+
+}
+
+.app {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
+
+.header {
+  padding: 10px 0;
+  color: #ea1e1e;
+}
+
+.header h1 {
+  font-family: 'Phantomsans', sans-serif;
+  font-size: 36px;
+  margin: 0;
+  color: black;
+  -webkit-background-clip: text;
+}
+
+.prompt {
+  font-family: 'Phantomsans', sans-serif;
+  font-size: 20px;
+  color: black;
+  margin: 20px 0;
+  background: -webkit-linear-gradient(144deg, #AF40FF, #5B42F3 50%, #00DDEB);
+  -webkit-background-clip: text;
+}
+
+.editors {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: calc(100vh - 120px); /* Full height minus header */
+
+}
+
+.editor-section {
+  width: 100%;
+  height: 100%;
+  text-align: left;;
+}
+
+h2 {
+  margin-bottom: 10px;
+  text-align: center;
+  z-index: 2;
+}
+
+.user-code-mirror {
+  height: 100%;
+}
+
+.opponent-code-mirror {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30%; /* Set a fixed width */
+  height: 40%; /* Set a fixed height */
+  opacity: 0.8; /* Make it transparent */
+  z-index: 1; /* Ensure it stays on top */
+  pointer-events: none; /* Prevent interaction */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Add shadow effect */
+  border-radius: 8px;
+}
+
+.button-64 {
+  position: absolute;
+  bottom: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+
+
+  align-items: center;
+  background-image: linear-gradient(144deg,#AF40FF, #5B42F3 50%,#00DDEB);
+  border: 0;
+  border-radius: 8px;
+  box-shadow: rgba(151, 65, 252, 0.2) 0 15px 30px -5px;
+  box-sizing: border-box;
+  color: #FFFFFF;
+  display: flex;
+  font-family: Phantomsans, sans-serif;
+  font-size: 16px;
+  justify-content: center;
+  line-height: 1em;
+  max-width: 100%;
+  min-width: 140px;
+  padding: 3px;
+  text-decoration: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.button-64:active,
+.button-64:hover {
+  outline: 0;
+}
+
+.button-64 span {
+  background-color: rgb(5, 6, 45);
+  padding: 16px 24px;
+  border-radius: 6px;
+  width: 100%;
+  height: 100%;
+  transition: 300ms;
+}
+
+.button-64:hover span {
+  background: none;
+}
+
+@media (min-width: 768px) {
+  .button-64 {
+    font-size: 16px;
+    min-width: 196px;
+  }
+}
