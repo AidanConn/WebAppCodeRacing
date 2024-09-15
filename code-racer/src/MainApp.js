@@ -1,14 +1,13 @@
 // src/App.js
 
 import React, { useState, useEffect } from 'react';
-import  { socket } from './socket.js';
 import CodeMirror from '@uiw/react-codemirror';
 import { java } from '@codemirror/lang-java';
 import { xcodeDark } from '@uiw/codemirror-theme-xcode';
 
 import './MainApp.css';
 
-const App = () => {
+const App = ({ socket }) => {
   const [userCode, setUserCode] = useState('');
   const [opponentCode, setOpponentCode] = useState('');
   const [prompt, setPrompt] = useState('TEMP Prompt');

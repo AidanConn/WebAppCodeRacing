@@ -1,15 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { io } from 'socket.io-client';
-
 import './WelcomePage.css';
 
-
-const WelcomePage = () => {
-    const [username, setUsername] = useState('');
-    const [haveUsername, setHaveUsername] = useState(false);
-    const [serverIP, setServerIP] = useState('');
-    const [socket, setSocket] = useState(null);
+const WelcomePage = ({ socket, connectToServer }) => {
+    const [username, setUsername] = useState(sessionStorage.getItem('username') || '');
+    const [haveUsername, setHaveUsername] = useState(!!username);
+    const [serverIP, setServerIP] = useState(sessionStorage.getItem('serverIP') || '');
     const [connected, setConnected] = useState(false);
     const [connectedUsers, setConnectedUsers] = useState([]);
     const [lobbies, setLobbies] = useState({ player1: false, player2: false, spectator: false });
@@ -23,26 +19,80 @@ const WelcomePage = () => {
         setServerIP(event.target.value);
     };
 
-    // Connect to the socket server
-    const connectToServer = () => {
-        const newSocket = io(`http://${serverIP}:4000`);
-        setSocket(newSocket);
-
-        newSocket.on('connect', () => {
-            setConnected(true);
-
-        });
-
-        newSocket.on('lobbyStatus', (status) => {
-            setLobbies(status);
-        });
-
-        newSocket.on('connectedUsers', (users) => {
-            setConnectedUsers(users);
-          });
+    // Connect to the socket server only if not already connected
+    const handleConnect = async () => {
+      if (!socket) {
+        try{
+          await connectToServer(serverIP);
+          setConnected(true);
+          sessionStorage.setItem('serverIP', serverIP);
+        } catch (error){
+          console.log('error connecting to server: ', error)
+        }
+      }
     };
 
-    // handle lobby selection
+    useEffect(() => {
+      const connectAndEmit = async () => {
+        if (!socket && haveUsername) {
+          try {
+            const newSocket = await connectToServer(serverIP); // Wait for the connection
+            if (newSocket) {
+              newSocket.emit('reconnectUser', { username, serverIP }); // Emit only after connection is established
+            }
+          } catch (error) {
+            console.error('Error reconnecting user:', error);
+          }
+        }
+      };
+    
+      connectAndEmit();
+    }, [socket, haveUsername, serverIP, username]); // Add necessary dependencies
+    
+
+    useEffect(() => {
+      if(socket){
+        socket.on('connect', () => {
+          setConnected(true);
+        });
+
+        if (username) {
+          setConnected(true);
+          socket.emit('reconnectUser', { username, serverIP});
+          setHaveUsername(true);
+        }
+
+        socket.on('lobbyStatus', (status) => {
+          setLobbies(status);
+        });
+
+        socket.on('connectedUsers', (users) => {
+          setConnectedUsers(users);
+          updateLobbyStatus(users)
+        });
+
+        return () => {
+          socket.off('connect');
+          socket.off('lobbyStatus');
+          socket.off('connectedUsers');
+        };
+      }
+    }, [socket]);
+
+    // Function to update lobby status based on connected users
+    const updateLobbyStatus = (users) => {
+      const updatedLobbies = { player1: false, player2: false };
+
+      users.forEach(user => {
+        if (user.role === 'player1') updatedLobbies.player1 = true;
+        if (user.role === 'player2') updatedLobbies.player2 = true;
+      });
+
+      setLobbies(updatedLobbies); // Update the lobby availability state
+    };
+
+
+
     const handleJoinLobby = (role) => {
         if (connected) {
           socket.emit('joinLobby', { username, role });
@@ -53,39 +103,26 @@ const WelcomePage = () => {
     const handleUsernameSubmit = () => {
         if (username !== '') {
             setHaveUsername(true);
-            socket.emit('addUser', username);
+            sessionStorage.setItem('username', username);
+            socket.emit('addUser', { username, serverIP});
         }
     };
 
-      // Effect to manage socket connection
     useEffect(() => {
-    if (socket) {
-      socket.on('disconnect', () => {
-        setConnected(false);
-        setHaveUsername(false);
-        setLobbies({ player1: false, player2: false, spectator: false });
-        setConnectedUsers([]);
-      });
-
-      return () => {
-        socket.disconnect();
-      };
-    }
-  }, [socket]);
-
-  // use effect to constantly update connected users
-    useEffect(() => {
-        if (socket) {
-        socket.on('connectedUsers', (users) => {
-            setConnectedUsers(users);
+      if (socket) {
+        socket.on('disconnect', () => {
+          setConnected(false);
+          setHaveUsername(false);
+          setLobbies({ player1: false, player2: false, spectator: false });
+          setConnectedUsers([]);
         });
-    
-        return () => {
-            socket.off('connectedUsers');
-        };
-        }
-    }, [socket]);
 
+        return () => {
+          // Remove disconnect event listener here, but don't disconnect the socket
+          socket.off('disconnect');
+        };
+      }
+    }, [socket]);
 
   return (
     <div className="welcome-page">
@@ -98,7 +135,7 @@ const WelcomePage = () => {
             onChange={handleServerIPChange}
             placeholder="Server IP Address"
           />
-          <button onClick={connectToServer}>Connect</button>
+          <button onClick={handleConnect}>Connect</button>
         </div>
       ) : !haveUsername ? (
         <div>
@@ -127,7 +164,9 @@ const WelcomePage = () => {
             <h2>Connected Users</h2>
             <ul>
               {connectedUsers.map((user, index) => (
-                <li key={index}>{user}</li>
+                <li key={index}>
+                    {user.username} - {user.role}
+                </li>
               ))}
             </ul>
           </div>

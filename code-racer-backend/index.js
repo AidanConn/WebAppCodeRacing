@@ -15,7 +15,10 @@ const io = new Server(httpServer, {
 
 // Store connected users
 const connectedUsers = new Map();
-const lobbies = { player1: false, player2: false, spectator: false };
+const lobbies = { player1: false, player2: false };
+var spectators = 0;
+const player1code="";
+const player2code="";
 
 const broadcastConnectedUsers = () => {
     io.emit('connectedUsers', Array.from(connectedUsers.values()));
@@ -26,36 +29,88 @@ io.on('connection', (socket) => {
     // Handle connection event
     console.log('a user connected:', socket.id);
   socket.on('disconnect', () => {
-    console.log('user disconnected');
+    const username = connectedUsers.get(socket.id);
+        
+        if (username){
+          if (username.role && username.role in lobbies){
+            lobbies[username.role] = false;
+          }
+        }
+        connectedUsers.delete(socket.id);
+        broadcastConnectedUsers();
+        console.log(`User ${username || 'unknown'} disconnected with socket ID ${socket.id}`);
   });
 
   // handle user events
   // ----------------------------------------------------
   // Handle user joining
-  socket.on('addUser', (username) => {
-    connectedUsers.set(socket.id, username);
+  socket.on('addUser', ({username, serverIP}) => {
+    connectedUsers.set(socket.id, { username, role: 'Lobby', server: serverIP });
     broadcastConnectedUsers();
-    console.log(`User ${username} connected with socket ID ${socket.id}`);
+    console.log(`User ${username} connected with socket ID ${socket.id} to ${serverIP}`);
     socket.emit('lobbyStatus', lobbies);
   });
+
+  // Handle reconnection
+  socket.on('reconnectUser', ({ username, serverIP }) => {
+    // Find if the username already exists
+    for (const [id, user] of connectedUsers) {
+      if (user.username === username && user.server === serverIP) {
+        connectedUsers.delete(id);
+      }
+    }
+
+    // Add the new user entry
+    connectedUsers.set(socket.id, { username, role: 'Lobby', server: serverIP });
+    console.log(`User ${username} reconnected with socket ID ${socket.id}`);
+    socket.emit('lobbyStatus', lobbies);
+    broadcastConnectedUsers();
+});
+
 
     // Handle user leaving
     socket.on('disconnect', () => {
         const username = connectedUsers.get(socket.id);
+        
+        if (username){
+          if (username.role && username.role in lobbies){
+            lobbies[username.role] = false;
+          }
+        }
         connectedUsers.delete(socket.id);
         broadcastConnectedUsers();
         console.log(`User ${username || 'unknown'} disconnected with socket ID ${socket.id}`);
       });
     
-      // Handle joining lobby
+    // Handle joining lobby
     socket.on('joinLobby', ({ username, role }) => {
-        if (connectedUsers.get(socket.id) === username) {
-        if (role in lobbies) {
-            lobbies[role] = true;
-            io.emit('lobbyStatus', lobbies);
-            console.log(`User ${username} joined as ${role}`);
+      const user = connectedUsers.get(socket.id);
+
+      if (user && user.username === username) {
+        // Check if any user already occupies the requested role
+        let roleTaken = false;
+        connectedUsers.forEach((otherUser) => {
+          if (otherUser.role === role) {
+            roleTaken = true;
+          }
+        });
+
+        // If the role is not taken and exists in the lobbies
+        if (role in lobbies && !roleTaken) {
+          lobbies[role] = true;
+          console.log(`User ${username} joined as ${role}`);
+
+          // Update user role
+          user.role = role;
+          connectedUsers.set(socket.id, user);
+
+          // Broadcast updated lobby status and connected users list
+          io.emit('lobbyStatus', lobbies);
+          broadcastConnectedUsers();
+        } else if (roleTaken) {
+          console.log(`Role ${role} is already taken by another user.`);
         }
-        }
+      }
     });
 
   // handle code update event
