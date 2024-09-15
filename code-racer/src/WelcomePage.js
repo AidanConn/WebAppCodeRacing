@@ -96,7 +96,11 @@ const WelcomePage = ({ socket, connectToServer }) => {
     const handleJoinLobby = (role) => {
         if (connected) {
           socket.emit('joinLobby', { username, role });
-          navigate('/app');
+          if (role == 'spectator'){
+            navigate('/spectator');
+          }else{
+            navigate('/app');
+          }
         }
       };
 

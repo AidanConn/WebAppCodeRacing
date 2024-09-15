@@ -11,22 +11,36 @@ const App = ({ socket }) => {
   const [userCode, setUserCode] = useState('');
   const [opponentCode, setOpponentCode] = useState('');
   const [prompt, setPrompt] = useState('TEMP Prompt');
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState(sessionStorage.getItem('username') || '');
 
 
 
   // handle the user's code changes, emit the changes to the server
   const handleUserCodeChange = (value) => {
     setUserCode(value);
-    socket.emit('codeUpdate', value);
+    socket.emit('codeUpdate', { username, code: value }); // Send username with code
   };
 
-  // Listen for opponent's code updates from the server]
+  // Listen for opponent's code updates from the server
   useEffect(() => {
-    socket.on('recieveCodeUpdate', (data) => {
-      setOpponentCode(data);
+    socket.on('receiveCodeUpdate', (data) => {
+      setOpponentCode(data.code);
     });
-  }, []);
+
+    // On component mount, request the current state of the code for both users
+    socket.emit('requestCodeState', { username });
+    
+    // Receive the initial code state (for spectators or reconnects)
+    socket.on('initialCodeState', (data) => {
+      setUserCode(data.userCode);
+      setOpponentCode(data.opponentCode);
+    });
+
+    return () => {
+      socket.off('receiveCodeUpdate');
+      socket.off('initialCodeState');
+    };
+  }, [socket, username]);
   
   return (
     <div className="app">

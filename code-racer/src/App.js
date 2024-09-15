@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import WelcomePage from './WelcomePage';
 import MainApp from './MainApp'; // Your main app component
+import Spectator from './Spectator';
 
 const App = () => {
   const [socket, setSocket] = useState(null);
@@ -28,6 +29,7 @@ const App = () => {
   <Routes>
     <Route path="/" element={<WelcomePage socket={socket} connectToServer={connectToServer} />} />
     <Route path="/app" element={<MainApp socket={socket} />} />
+    <Route path="/spectator" element={<Spectator socket={socket} />} />    
   </Routes>
   );
 };

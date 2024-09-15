@@ -17,8 +17,7 @@ const io = new Server(httpServer, {
 const connectedUsers = new Map();
 const lobbies = { player1: false, player2: false };
 var spectators = 0;
-const player1code="";
-const player2code="";
+let codeStates = {};
 
 const broadcastConnectedUsers = () => {
     io.emit('connectedUsers', Array.from(connectedUsers.values()));
@@ -113,19 +112,51 @@ io.on('connection', (socket) => {
       }
     });
 
-  // handle code update event
-  socket.on('codeUpdate', (code) => {
-    socket.broadcast.emit('recieveCodeUpdate', code);
-    console.log('Code updated:', code);
+// Handle code update event
+socket.on('codeUpdate', ({ username, code }) => {
+  // Update the code state for the given user
+  codeStates[username] = code;
+
+  // Search through connectedUsers for the role of the user
+  const user = connectedUsers.get(socket.id);
+
+  if (user) {
+    const { role } = user;
+
+    // Broadcast code update to the opponent and spectators, including the role
+    socket.broadcast.emit('receiveCodeUpdate', { username, role, code });
+    console.log(`${username}-${role} code: ${code}`);
+  } else {
+    console.log(`User ${username} not found in connectedUsers map.`);
+  }
+});
+
+  socket.on('requestCodeState', ({ username }) => {
+    // You may want to determine which user is the opponent
+    const opponentUsername = getOpponentUsername(username); // Custom function
+    const opponentCode = codeStates[opponentUsername] || '';
+
+    // Emit the current code state to the user
+    socket.emit('initialCodeState', {
+      userCode: codeStates[username] || '',
+      opponentCode
+    });
   });
 
   socket.on('finish', (code) => {
     // Handle finish event
     console.log('Code submitted:', code);
   });
+
 });
 
 // Start the server on port 4000
 httpServer.listen(4000, () => {
   console.log('Server is running on http://localhost:4000');
 });
+
+// Helper function to find the opponent (adjust logic as needed)
+function getOpponentUsername(username) {
+  const users = Object.keys(codeStates);
+  return users.find((user) => user !== username);
+}
