@@ -1,6 +1,49 @@
 const http = require('http');
 const { Server } = require('socket.io');
+const { exec } = require('child_process');
 
+// DOCKER COMMANDS
+// ----------------------------------------------------
+function checkDockerImageExists(imageName) {
+  return new Promise((resolve, reject) => {
+    exec(`docker images -q ${imageName}`, (error, stdout) => {
+      if (error) return reject(error);
+      resolve(stdout.trim() !== '');
+    });
+  });
+}
+
+function buildDockerImage(imageName, dockerfilePath) {
+  return new Promise((resolve, reject) => {
+    exec(`docker build -t ${imageName} -f ${dockerfilePath} .`, (error) => {
+      console.log(`Building Docker image ${imageName}...`);
+      console.log(`Error: ${error}`);
+      if (error) return reject(error);
+      resolve();
+    });
+  });
+}
+
+async function compileAndRunCode(language, code) {
+  const imageName = `code-racer-${language}`;
+  const dockerfilePath = `./dockerfiles/Dockerfile.${language}`;
+
+  if (!(await checkDockerImageExists(imageName))) {
+    await buildDockerImage(imageName, dockerfilePath);
+  }
+
+  return new Promise((resolve, reject) => {
+    const containerCommand = `echo "${code}" | docker run -i ${imageName}`;
+    exec(containerCommand, (error, stdout, stderr) => {
+      if (error) return reject(stderr);
+      resolve(stdout);
+    });
+  });
+}
+
+
+// SERVER SETUP
+// ----------------------------------------------------
 // Create an HTTP server
 const httpServer = http.createServer();
 
@@ -146,6 +189,16 @@ socket.on('codeUpdate', ({ username, code }) => {
   socket.on('finish', (code) => {
     // Handle finish event
     console.log('Code submitted:', code);
+  });
+
+  // Handle code execution event
+  socket.on('executeCode', async ({ language, code }, callback) => {
+    try {
+      const result = await compileAndRunCode(language, code);
+      callback({ success: true, result });
+    } catch (error) {
+      callback({ success: false, error });
+    }
   });
 
 });

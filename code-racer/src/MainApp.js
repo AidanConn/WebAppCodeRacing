@@ -13,7 +13,16 @@ const App = ({ socket }) => {
   const [prompt, setPrompt] = useState('TEMP Prompt');
   const [username, setUsername] = useState(sessionStorage.getItem('username') || '');
 
-
+  // Handle code execution event
+  const executeCode = () => {
+    socket.emit('executeCode', { language: 'java', code: userCode }, (response) => {
+      if (response.success) {
+        console.log('Execution Result:', response.result);
+      } else {
+        console.error('Execution Error:', response.error);
+      }
+    });
+  };
 
   // handle the user's code changes, emit the changes to the server
   const handleUserCodeChange = (value) => {
@@ -70,7 +79,7 @@ const App = ({ socket }) => {
             extensions={[java()]}
             theme={xcodeDark}
           />
-          <button className="button-64" role="button" onClick={() => setOpponentCode('Test')}><span class="text">Finish</span></button>
+          <button className="button-64" role="button" onClick={() => executeCode()}><span className="text">Test Code</span></button>
         </div>
       </div>
     </div>
