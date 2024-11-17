@@ -1,6 +1,9 @@
 const http = require('http');
 const { Server } = require('socket.io');
 const { exec } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
 
 // DOCKER COMMANDS
 // ----------------------------------------------------
@@ -28,17 +31,54 @@ async function compileAndRunCode(language, code) {
   const imageName = `code-racer-${language}`;
   const dockerfilePath = `./dockerfiles/Dockerfile.${language}`;
 
+  // Path to existing problem files
+  const problem = getCurrentProblem();
+  let templateCode = fs.readFileSync(`${__dirname}/problems/${language}/${problem.fileName}`, 'utf8');
+  templateCode = templateCode.replace("// User needs to implement this method", code);
+
+  // Write the code to a temporary file with a unique name
+  const tempFileName = `temp${Date.now()}.java`;
+  const classname = problem.fileName.split('.')[0];
+  const fileLocation = `${__dirname}/problems/${language}/Temp/${tempFileName.split('.')[0]}`
+  templateCode = templateCode.replace(classname, tempFileName.split('.')[0]);
+  fs.mkdirSync(fileLocation, { recursive: true });
+  const tempFilePath = path.join(fileLocation, tempFileName);
+  fs.writeFileSync(tempFilePath, templateCode);
+
+
   if (!(await checkDockerImageExists(imageName))) {
     await buildDockerImage(imageName, dockerfilePath);
   }
 
   return new Promise((resolve, reject) => {
-    const containerCommand = `echo "${code}" | docker run -i ${imageName}`;
+    const containerCommand = `docker run -v ${fileLocation}:/usr/src/app -w /usr/src/app ${imageName}`;
+
     exec(containerCommand, (error, stdout, stderr) => {
+      console.log(`Executing code in Docker container...`);
+      console.log(`Error: ${error}`);
+      console.log(`Stdout: ${stdout}`);
+      console.log(`Stderr: ${stderr}`);
+      
       if (error) return reject(stderr);
       resolve(stdout);
     });
   });
+}
+
+// PROBLEM SETUP
+// ----------------------------------------------------
+const currentProblemID = 1;
+const problemsFile = require('./problems/problems.json');
+
+// Fetch current problem
+function getCurrentProblem() {
+  return problemsFile.problems.find((problem) => problem.id === currentProblemID);
+}
+
+// Fetch next problem, if overflow, wrap back to 1
+function getNextProblem() {
+  currentProblemID = currentProblemID % problems.length + 1;
+  return getCurrentProblem();
 }
 
 
@@ -56,10 +96,9 @@ const io = new Server(httpServer, {
   }
 });
 
-// Store connected users
+// GLOBAL VARIABLES
 const connectedUsers = new Map();
 const lobbies = { player1: false, player2: false };
-var spectators = 0;
 let codeStates = {};
 
 const broadcastConnectedUsers = () => {
@@ -70,6 +109,8 @@ const broadcastConnectedUsers = () => {
 io.on('connection', (socket) => {
     // Handle connection event
     console.log('a user connected:', socket.id);
+
+
   socket.on('disconnect', () => {
     const username = connectedUsers.get(socket.id);
         
@@ -81,6 +122,14 @@ io.on('connection', (socket) => {
         connectedUsers.delete(socket.id);
         broadcastConnectedUsers();
         console.log(`User ${username || 'unknown'} disconnected with socket ID ${socket.id}`);
+  });
+
+  // Handle problem request event
+  socket.on('requestProblem', (data, callback) => {
+    const { username } = data;
+    const problem = getCurrentProblem();
+    codeStates[username] = problem.template;
+    callback(problem);
   });
 
   // handle user events
@@ -193,6 +242,7 @@ socket.on('codeUpdate', ({ username, code }) => {
 
   // Handle code execution event
   socket.on('executeCode', async ({ language, code }, callback) => {
+    console.log(`Executing code for language ${language}`);
     try {
       const result = await compileAndRunCode(language, code);
       callback({ success: true, result });

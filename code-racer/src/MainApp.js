@@ -5,33 +5,24 @@ import CodeMirror from '@uiw/react-codemirror';
 import { java } from '@codemirror/lang-java';
 import { xcodeDark } from '@uiw/codemirror-theme-xcode';
 
+
 import './MainApp.css';
 
 const App = ({ socket }) => {
   const [userCode, setUserCode] = useState('');
-  const [opponentCode, setOpponentCode] = useState('');
-  const [prompt, setPrompt] = useState('TEMP Prompt');
+  const [opponentCode, setOpponentCode] = useState('Te');
+  const [prompt, setPrompt] = useState('');
   const [username, setUsername] = useState(sessionStorage.getItem('username') || '');
 
-  // Handle code execution event
-  const executeCode = () => {
-    socket.emit('executeCode', { language: 'java', code: userCode }, (response) => {
-      if (response.success) {
-        console.log('Execution Result:', response.result);
-      } else {
-        console.error('Execution Error:', response.error);
-      }
-    });
-  };
-
-  // handle the user's code changes, emit the changes to the server
-  const handleUserCodeChange = (value) => {
-    setUserCode(value);
-    socket.emit('codeUpdate', { username, code: value }); // Send username with code
-  };
-
-  // Listen for opponent's code updates from the server
+  // Fetch problem from the backend when the component mounts
   useEffect(() => {
+    socket.emit('requestProblem', { username }, (problem) => {
+      setPrompt(problem.description);
+      setUserCode(problem.template);
+      console.log('Problem:', problem);
+    });
+
+    // Listen for opponent's code updates from the server
     socket.on('receiveCodeUpdate', (data) => {
       setOpponentCode(data.code);
     });
@@ -50,7 +41,24 @@ const App = ({ socket }) => {
       socket.off('initialCodeState');
     };
   }, [socket, username]);
-  
+
+  // Handle code execution event
+  const executeCode = () => {
+    socket.emit('executeCode', { language: 'java', code: userCode }, (response) => {
+      if (response.success) {
+        console.log('Execution Result:', response.result);
+      } else {
+        console.error('Execution Error:', response.error);
+      }
+    });
+  };
+
+  // Handle the user's code changes, emit the changes to the server
+  const handleUserCodeChange = (value) => {
+    setUserCode(value);
+    socket.emit('codeUpdate', { username, code: value }); // Send username with code
+  };
+
   return (
     <div className="app">
       <div className="header">
@@ -67,7 +75,6 @@ const App = ({ socket }) => {
             extensions={[java()]}
             theme={xcodeDark}
             spellCheck={false} 
-            
           />
         </div>
 
@@ -79,7 +86,9 @@ const App = ({ socket }) => {
             extensions={[java()]}
             theme={xcodeDark}
           />
-          <button className="button-64" role="button" onClick={() => executeCode()}><span className="text">Test Code</span></button>
+          <button className="button-64" role="button" onClick={executeCode}>
+            <span className="text">Test Code</span>
+          </button>
         </div>
       </div>
     </div>

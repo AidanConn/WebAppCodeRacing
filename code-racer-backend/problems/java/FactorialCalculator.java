@@ -1,10 +1,6 @@
 public class FactorialCalculator {
 
     // User needs to implement this method
-    public static int factorial(int n) {
-        // User code goes here
-        return -1; // Placeholder
-    }
 
     public static void main(String[] args) {
         // Predefined test cases
