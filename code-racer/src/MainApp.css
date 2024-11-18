@@ -20,8 +20,9 @@ html, body {
 }
 
 .header {
-  padding: 10px 0;
-  color: #ea1e1e;
+  padding: 20px;
+  color: black;
+  text-align: center;
 }
 
 .header h1 {
@@ -32,14 +33,18 @@ html, body {
   -webkit-background-clip: text;
 }
 
-.prompt {
-  font-family: 'Phantomsans', sans-serif;
-  font-size: 20px;
-  color: black;
-  margin: 20px 0;
-  background: -webkit-linear-gradient(144deg, #AF40FF, #5B42F3 50%, #00DDEB);
-  -webkit-background-clip: text;
+.problem-details {
+  margin-top: 10px;
 }
+
+.problem-details h2 {
+  margin-bottom: 5px;
+}
+
+.problem-details p {
+  margin: 5px 0;
+}
+
 
 .editors {
   position: relative;
@@ -80,8 +85,9 @@ h2 {
 
 .button-64 {
   position: absolute;
-  bottom: 50px;
+  bottom: 100px;
   left: 50%;
+  margin-bottom: 10%;
   transform: translateX(-50%);
 
 
@@ -132,3 +138,137 @@ h2 {
     min-width: 196px;
   }
 }
+
+/* Notification Pop-up */
+.notification {
+  position: fixed;
+  bottom: 200px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 16px;
+  color: white;
+  z-index: 1000;
+  animation: fadeInOut 3s ease-in-out;
+  opacity: 1;
+  transition: opacity 0.5s ease-out;
+}
+
+.notification.success {
+  background-color: #4CAF50; /* Green */
+}
+
+.notification.error {
+  background-color: #f44336; /* Red */
+}
+
+/* Optional: Fade out after 10 seconds */
+.notification.fade-out {
+  opacity: 0;
+  transition: opacity 1s ease-out;
+}
+
+.next-problem-button {
+  position: absolute;
+  top: 200px;
+  right: 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.next-problem-button:hover {
+  background-color: #0056b3;
+}
+
+.next-problem-button:focus {
+  outline: none;
+  box-shadow: 0 0 5px #007bff;
+}
+
+/* Success effect: light green and bounce */
+.success-effect {
+  animation: bounce .1s ease-in-out infinite;
+  background-color: rgba(0, 255, 0, 0.2); /* Light green background */
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Failure effect: light red and shake */
+.failure-effect {
+  animation: shake .1s ease-in-out infinite;
+  background-color: rgba(255, 0, 0, 0.2); /* Light red background */
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+/* Notification container */
+.Oppnotification {
+  position: absolute; /* Positioned relative to the editor */
+  top: 400px; /* Distance from the top of the editor */
+  left: 85%; /* Center horizontally */
+  transform: translateX(-50%); /* Center adjustment */
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  animation: fadeInOut 3s ease-in-out;
+  z-index: 10; /* Ensure it appears above the editor */
+  pointer-events: none; /* Prevent interaction */
+}
+
+/* Success notification style */
+.Oppnotification.success {
+  background-color: rgba(0, 255, 0, 0.8); /* Semi-transparent green */
+  color: white; /* White text for contrast */
+  border: 2px solid #28a745; /* Green border */
+}
+
+/* Failure notification style */
+.Oppnotification.error {
+  background-color: rgba(255, 0, 0, 0.8); /* Semi-transparent red */
+  color: white; /* White text for contrast */
+  border: 2px solid #dc3545; /* Red border */
+}
+
+/* Fade-in and fade-out animation for notifications */
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px); /* Slightly above */
+  }
+  10%, 90% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0); /* Fully visible */
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px); /* Fade out */
+  }
+}
+

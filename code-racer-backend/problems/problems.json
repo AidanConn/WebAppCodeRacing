@@ -8,7 +8,7 @@
         "outputExample": "true",
         "template": "public static boolean isPalindrome(String input) {\n    // Your code here\n    return false; // Placeholder\n}",
         "fileName": "PalindromeChecker.java",
-        "difficulty": "Easy"
+        "difficulty": "Medium"
       },
       {
         "id": 2,
@@ -18,7 +18,7 @@
         "outputExample": "5",
         "template": "public static int fibonacci(int n) {\n    // Your code here\n    return -1; // Placeholder\n}",
         "fileName": "FibonacciCalculator.java",
-        "difficulty": "Easy"
+        "difficulty": "Medium"
       },
       {
         "id": 3,
@@ -28,7 +28,7 @@
         "outputExample": "120",
         "template": "public static int factorial(int n) {\n    // Your code here\n    return -1; // Placeholder\n}",
         "fileName": "FactorialCalculator.java",
-        "difficulty": "Easy"
+        "difficulty": "Medium"
       }
     ]
   }

@@ -3,7 +3,6 @@ const { Server } = require('socket.io');
 const { exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const os = require('os');
 
 // DOCKER COMMANDS
 // ----------------------------------------------------
@@ -31,7 +30,6 @@ async function compileAndRunCode(language, code) {
   const imageName = `code-racer-${language}`;
   const dockerfilePath = `./dockerfiles/Dockerfile.${language}`;
 
-  // Path to existing problem files
   const problem = getCurrentProblem();
   let templateCode = fs.readFileSync(`${__dirname}/problems/${language}/${problem.fileName}`, 'utf8');
   templateCode = templateCode.replace("// User needs to implement this method", code);
@@ -39,35 +37,58 @@ async function compileAndRunCode(language, code) {
   // Write the code to a temporary file with a unique name
   const tempFileName = `temp${Date.now()}.java`;
   const classname = problem.fileName.split('.')[0];
-  const fileLocation = `${__dirname}/problems/${language}/Temp/${tempFileName.split('.')[0]}`
+  const fileLocation = `${__dirname}/problems/${language}/Temp/${tempFileName.split('.')[0]}`;
   templateCode = templateCode.replace(classname, tempFileName.split('.')[0]);
   fs.mkdirSync(fileLocation, { recursive: true });
   const tempFilePath = path.join(fileLocation, tempFileName);
   fs.writeFileSync(tempFilePath, templateCode);
-
 
   if (!(await checkDockerImageExists(imageName))) {
     await buildDockerImage(imageName, dockerfilePath);
   }
 
   return new Promise((resolve, reject) => {
-    const containerCommand = `docker run -v ${fileLocation}:/usr/src/app -w /usr/src/app ${imageName}`;
+    const containerName = `code-runner-${Date.now()}`;
+    const containerCommand = `docker run --name ${containerName} -v ${fileLocation}:/usr/src/app -w /usr/src/app ${imageName}`;
 
-    exec(containerCommand, (error, stdout, stderr) => {
+    exec(containerCommand, async (error, stdout, stderr) => {
       console.log(`Executing code in Docker container...`);
       console.log(`Error: ${error}`);
       console.log(`Stdout: ${stdout}`);
       console.log(`Stderr: ${stderr}`);
-      
-      if (error) return reject(stderr);
-      resolve(stdout);
+
+      // Cleanup: Remove Docker container
+      const cleanupDockerContainer = `docker rm -f ${containerName}`;
+      exec(cleanupDockerContainer, (cleanupError) => {
+        if (cleanupError) {
+          console.error(`Failed to remove Docker container: ${cleanupError.message}`);
+        } else {
+          console.log(`Docker container ${containerName} removed successfully.`);
+        }
+      });
+
+      // Cleanup: Remove temporary folder
+      fs.rm(fileLocation, { recursive: true, force: true }, (err) => {
+        if (err) {
+          console.error(`Failed to remove temporary folder: ${err.message}`);
+        } else {
+          console.log(`Temporary folder ${fileLocation} removed successfully.`);
+        }
+      });
+
+      // Resolve or reject based on Docker execution result
+      if (error || stderr) {
+        reject({ error, stdout, stderr });
+      } else {
+        resolve({ stdout, stderr, error: null });
+      }
     });
   });
 }
 
 // PROBLEM SETUP
 // ----------------------------------------------------
-const currentProblemID = 1;
+var currentProblemID = 2;
 const problemsFile = require('./problems/problems.json');
 
 // Fetch current problem
@@ -77,7 +98,7 @@ function getCurrentProblem() {
 
 // Fetch next problem, if overflow, wrap back to 1
 function getNextProblem() {
-  currentProblemID = currentProblemID % problems.length + 1;
+  currentProblemID = currentProblemID % problemsFile.problems.length + 1;
   return getCurrentProblem();
 }
 
@@ -130,6 +151,28 @@ io.on('connection', (socket) => {
     const problem = getCurrentProblem();
     codeStates[username] = problem.template;
     callback(problem);
+  });
+
+  // Handle next problem request event
+  socket.on('requestNextProblem', (data, callback) => {
+    const { username } = data;
+    const problem = getNextProblem();
+    codeStates[username] = problem.template;
+    io.emit('nextProblem', { problem });
+    callback(problem);
+  });
+
+  // Handle one user being correct or failing
+  socket.on('Success', (data) => {
+    const { username } = data;
+    console.log(`User ${username} succeeded`);
+    io.emit('OpponentSuccess', { username });
+  });
+
+  socket.on('Failure', (data) => {
+    const { username } = data;
+    console.log(`User ${username} failed`);
+    io.emit('OpponentFailure', { username });
   });
 
   // handle user events
@@ -241,15 +284,35 @@ socket.on('codeUpdate', ({ username, code }) => {
   });
 
   // Handle code execution event
-  socket.on('executeCode', async ({ language, code }, callback) => {
-    console.log(`Executing code for language ${language}`);
-    try {
-      const result = await compileAndRunCode(language, code);
-      callback({ success: true, result });
-    } catch (error) {
-      callback({ success: false, error });
-    }
-  });
+socket.on('executeCode', async ({ language, code }, callback) => {
+  console.log(`Executing code for language ${language}`);
+  try {
+    const result = await compileAndRunCode(language, code);
+    
+    // Return all three outputs (stdout, stderr, error) with a success message
+    callback({
+      success: true,
+      message: 'Code executed successfully',
+      result: {
+        stdout: result.stdout,
+        stderr: result.stderr,
+        error: result.error // This will be null if no error occurred
+      }
+    });
+  } catch (error) {
+    // If there was an error, return the error details
+    callback({
+      success: false,
+      message: 'Code execution failed',
+      result: {
+        stdout: error.stdout,
+        stderr: error.stderr,
+        error: error.error
+      }
+    });
+  }
+});
+
 
 });
 
