@@ -22,6 +22,8 @@ const App = ({ socket }) => {
   const [notification, setNotification] = useState(null);
   const [opponentEffect, setOpponentEffect] = useState('');
   const [opponentNotification, setOpponentNotification] = useState(null);
+  const [flashbangEffect, setFlashbangEffect] = useState(false);
+
 
   // Fetch problem from the backend when the component mounts
   useEffect(() => {
@@ -78,13 +80,26 @@ const App = ({ socket }) => {
         setTimeout(() => setOpponentNotification(null), 3000); // Clear
         setTimeout(() => setOpponentEffect(''), 3000); // Clear animation after 3 seconds
       }
+    }); 
+
+    // Handle flashbang effect
+    socket.on('flashbang', (data) => {
+      if (data.username === username) {
+        setFlashbangEffect(true);
+        setTimeout(() => setFlashbangEffect(false), 3000); // Remove flashbang effect after 3 seconds
+      }
     });
+
 
     return () => {
       socket.off('receiveCodeUpdate');
       socket.off('initialCodeState');
       socket.off('Success');
       socket.off('Failure');
+      socket.off('nextProblem');
+      socket.off('OpponentSuccess');
+      socket.off('OpponentFailure');
+      socket.off('flashbang');
     };
   }, [socket, username]);
 
@@ -131,59 +146,62 @@ const App = ({ socket }) => {
   };
 
   return (
-    <div className="app">
-      <div className="header">
-        <h1>Code Racer</h1>
-        <button className="next-problem-button" onClick={loadNextProblem}>
-          Next Problem
-        </button>
-        <div className='problem-details'>
-          <h2>{problemDetails.title}</h2>
-          <p><strong>Description:</strong> {problemDetails.description}</p>
-          <p><strong>Example Input:</strong> {problemDetails.inputExample}</p>
-          <p><strong>Example Output:</strong> {problemDetails.outputExample}</p>
-          <p><strong>Difficulty:</strong> {problemDetails.difficulty}</p>
-        </div>
-      </div>
-      <div className="editors">
-        {/* User's code editor */}
-        <div className="editor-section">
-          <CodeMirror className='user-code-mirror'
-            value={userCode}
-            height='100%'
-            onChange={handleUserCodeChange}
-            extensions={[java()]}
-            theme={xcodeDark}
-            spellCheck={false}
-          />
-        </div>
-
-        {/* Opponent's code editor (read-only) */}
-        <div className={`editor-section opponent-editor`}>
-          <CodeMirror className= {`opponent-code-mirror ${opponentEffect === 'success' ? 'success-effect' : opponentEffect === 'failure' ? 'failure-effect' : ''
-          }`}
-            value={opponentCode}
-            height='100%'
-            extensions={[java()]}
-            theme={xcodeDark}
-          />
-          {opponentNotification && (
-            <div className={`Oppnotification ${opponentNotification.type}`}>
-              {opponentNotification.message}
-            </div>
-          )}
-          {notification && (
-            <div className={`notification ${notification.type}`}>
-              {notification.message}
-            </div>
-          )}
-          <button className="button-64" role="button" onClick={executeCode}>
-            <span className="text">Test Code</span>
+    <>
+      {flashbangEffect && <div className="flashbang"></div>}
+      <div className="app">
+        <div className="header">
+          <h1>Code Racer</h1>
+          <button className="next-problem-button" onClick={loadNextProblem}>
+            Next Problem
           </button>
+          <div className='problem-details'>
+            <h2>{problemDetails.title}</h2>
+            <p><strong>Description:</strong> {problemDetails.description}</p>
+            <p><strong>Example Input:</strong> {problemDetails.inputExample}</p>
+            <p><strong>Example Output:</strong> {problemDetails.outputExample}</p>
+            <p><strong>Difficulty:</strong> {problemDetails.difficulty}</p>
+          </div>
+        </div>
+        <div className="editors">
+          {/* User's code editor */}
+          <div className="editor-section">
+            <CodeMirror className='user-code-mirror'
+              value={userCode}
+              height='100%'
+              onChange={handleUserCodeChange}
+              extensions={[java()]}
+              theme={xcodeDark}
+              spellCheck={false}
+            />
+          </div>
+  
+          {/* Opponent's code editor (read-only) */}
+          <div className={`editor-section opponent-editor`}>
+            <CodeMirror className={`opponent-code-mirror ${opponentEffect === 'success' ? 'success-effect' : opponentEffect === 'failure' ? 'failure-effect' : ''
+              }`}
+              value={opponentCode}
+              height='100%'
+              extensions={[java()]}
+              theme={xcodeDark}
+            />
+            {opponentNotification && (
+              <div className={`Oppnotification ${opponentNotification.type}`}>
+                {opponentNotification.message}
+              </div>
+            )}
+            {notification && (
+              <div className={`notification ${notification.type}`}>
+                {notification.message}
+              </div>
+            )}
+            <button className="button-64" role="button" onClick={executeCode}>
+              <span className="text">Test Code</span>
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
-};
+}
 
 export default App;

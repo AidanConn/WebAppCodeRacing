@@ -150,6 +150,7 @@ io.on('connection', (socket) => {
     const { username } = data;
     const problem = getCurrentProblem();
     codeStates[username] = problem.template;
+    io.emit('currentProblem', { problem });
     callback(problem);
   });
 
@@ -159,6 +160,7 @@ io.on('connection', (socket) => {
     const problem = getNextProblem();
     codeStates[username] = problem.template;
     io.emit('nextProblem', { problem });
+    io.emit('currentProblem', { problem });
     callback(problem);
   });
 
@@ -174,6 +176,26 @@ io.on('connection', (socket) => {
     console.log(`User ${username} failed`);
     io.emit('OpponentFailure', { username });
   });
+
+  socket.on('flashbang', (data) => {
+    const { player } = data;
+
+    let username = null;
+    for (const [id, user] of connectedUsers.entries()) {
+        if (user.role === player) {
+            username = user.username;
+            break;
+        }
+    }
+
+    if (username) {
+        console.log(`Player ${username} was flashbanged`);
+        io.emit('flashbang', { username });
+        io.emit('SpectatorFlashbang', { player });
+    } else {
+        console.log(`No user found with the role ${player}`);
+    }
+});
 
   // handle user events
   // ----------------------------------------------------

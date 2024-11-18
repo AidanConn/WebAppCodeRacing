@@ -29,6 +29,106 @@
         "template": "public static int factorial(int n) {\n    // Your code here\n    return -1; // Placeholder\n}",
         "fileName": "FactorialCalculator.java",
         "difficulty": "Medium"
+      },
+      {
+        "id": 4,
+        "title": "Reverse String",
+        "description": "Write a function `reverseString` that takes a string as input and returns the reversed string. Ignore any leading or trailing whitespace, and preserve the case of the characters.",
+        "inputExample": "\"hello\"",
+        "outputExample": "\"olleh\"",
+        "template": "public static String reverseString(String input) {\n    // Your code here\n    return \"\"; // Placeholder\n}",
+        "fileName": "ReverseString.java",
+        "difficulty": "Easy"
+      },
+      {
+        "id": 5,
+        "title": "Sum of Digits",
+        "description": "Write a function `sumOfDigits` that takes a non-negative integer as input and returns the sum of its digits. For example, if the input is 123, the function should return 6 (1 + 2 + 3).",
+        "inputExample": "123",
+        "outputExample": "6",
+        "template": "public static int sumOfDigits(int n) {\n    // Your code here\n    return -1; // Placeholder\n}",
+        "fileName": "SumOfDigits.java",
+        "difficulty": "Easy"
+      },
+      {
+        "id": 6,
+        "title": "Maximum of Three Numbers",
+        "description": "Write a function `maxOfThree` that takes three integers as input and returns the maximum of the three numbers. Ensure the function works for negative numbers as well.",
+        "inputExample": "3, 7, 5",
+        "outputExample": "7",
+        "template": "public static int maxOfThree(int a, int b, int c) {\n    // Your code here\n    return -1; // Placeholder\n}",
+        "fileName": "MaxOfThree.java",
+        "difficulty": "Easy"
+      },
+      {
+        "id": 7,
+        "title": "Check Even or Odd",
+        "description": "Write a function `isEven` that takes an integer as input and returns a boolean indicating whether the number is even. A number is even if it is divisible by 2.",
+        "inputExample": "4",
+        "outputExample": "true",
+        "template": "public static boolean isEven(int n) {\n    // Your code here\n    return false; // Placeholder\n}",
+        "fileName": "CheckEvenOrOdd.java",
+        "difficulty": "Easy"
+      },
+      {
+        "id": 8,
+        "title": "Count Vowels",
+        "description": "Write a function `countVowels` that takes a string as input and returns the count of vowels (a, e, i, o, u, both uppercase and lowercase) in the string.",
+        "inputExample": "\"hello world\"",
+        "outputExample": "3",
+        "template": "public static int countVowels(String input) {\n    // Your code here\n    return -1; // Placeholder\n}",
+        "fileName": "CountVowels.java",
+        "difficulty": "Easy"
+      },
+      {
+        "id": 9,
+        "title": "Sum of Even Numbers",
+        "description": "Write a function `sumOfEvens` that takes an integer `n` as input and returns the sum of all even numbers from 1 to `n` (inclusive).",
+        "inputExample": "10",
+        "outputExample": "30",
+        "template": "public static int sumOfEvens(int n) {\n    // Your code here\n    return -1; // Placeholder\n}",
+        "fileName": "SumOfEvens.java",
+        "difficulty": "Easy"
+      },
+      {
+        "id": 10,
+        "title": "Find Maximum",
+        "description": "Write a function `findMax` that takes an array of integers as input and returns the maximum value in the array.",
+        "inputExample": "[1, 2, 3, 4, 5]",
+        "outputExample": "5",
+        "template": "public static int findMax(int[] arr) {\n    // Your code here\n    return -1; // Placeholder\n}",
+        "fileName": "FindMax.java",
+        "difficulty": "Easy"
+      },
+      {
+        "id": 11,
+        "title": "Count Words",
+        "description": "Write a function `countWords` that takes a string as input and returns the number of words in the string. Words are separated by spaces.",
+        "inputExample": "\"This is a test.\"",
+        "outputExample": "4",
+        "template": "public static int countWords(String input) {\n    // Your code here\n    return -1; // Placeholder\n}",
+        "fileName": "CountWords.java",
+        "difficulty": "Easy"
+      },
+      {
+        "id": 12,
+        "title": "Check Palindrome Number",
+        "description": "Write a function `isPalindromeNumber` that takes an integer as input and returns a boolean indicating whether the number is a palindrome. A palindrome number is the same when read forward and backward.",
+        "inputExample": "121",
+        "outputExample": "true",
+        "template": "public static boolean isPalindromeNumber(int n) {\n    // Your code here\n    return false; // Placeholder\n}",
+        "fileName": "PalindromeNumber.java",
+        "difficulty": "Easy"
+      },
+      {
+        "id": 13,
+        "title": "Find the Smallest Number",
+        "description": "Write a function `findSmallest` that takes an array of integers as input and returns the smallest value in the array.",
+        "inputExample": "[5, 1, 3, 8, 2]",
+        "outputExample": "1",
+        "template": "public static int findSmallest(int[] arr) {\n    // Your code here\n    return -1; // Placeholder\n}",
+        "fileName": "FindSmallest.java",
+        "difficulty": "Easy"
       }
     ]
   }
